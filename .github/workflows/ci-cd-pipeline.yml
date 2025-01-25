@@ -138,4 +138,25 @@ jobs:
               --image-uri 692859932238.dkr.ecr.ap-south-1.amazonaws.com/mlops_assign_1:latest
             echo "Lambda function updated successfully."
           fi
+      - name: Create Lambda Function URL
+        run: |
+          # Create Lambda function URL (using the Lambda function name)
+          FUNCTION_URL=$(aws lambda create-function-url \
+            --function-name mlops_assign_1 \
+            --qualifier ${{ github.sha }} \
+            --authorization-type NONE \
+            --region ap-south-1 \
+            --query 'FunctionUrl' \
+            --output text)
 
+          echo "Lambda Function URL: $FUNCTION_URL"
+
+          # Save the function URL for later use
+          echo "LAMBDA_FUNCTION_URL=$FUNCTION_URL" >> $GITHUB_ENV
+
+      - name: Test Lambda function using curl
+        run: |
+          # Test the Lambda function using curl
+          curl -X POST ${{ env.LAMBDA_FUNCTION_URL }} \
+            -H "Content-Type: application/json" \
+            -d '{"area": 2000, "bedrooms": 3, "bathrooms": 2, "stories": 2, "parking": 1}'
