@@ -173,10 +173,16 @@ jobs:
               "s3_bucket": "zappa-mlops-assign-1"
             }
           }' > zappa_settings.json
-      - name: Deploy Flask app to Lambda using Zappa
+      - name: Configure AWS CLI with secrets
         run: |
-          # Deploy using Zappa
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region ap-south-1  # Update with your region
+
+      - name: Deploy using Zappa
+        run: |
           zappa deploy production
+
 
       - name: Create Lambda Function URL
         run: |
