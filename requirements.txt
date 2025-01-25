@@ -4,3 +4,4 @@ scipy
 pytest
 Flask
 zappa
+setuptools
