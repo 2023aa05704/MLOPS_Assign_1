@@ -175,7 +175,8 @@ jobs:
               "profile_name": "default",
               "project_name": "mlops-assign-1",
               "runtime": "python3.11",
-              "s3_bucket": "zappa-mlops-assign-1"
+              "s3_bucket": "zappa-mlops-assign-1",
+              "image_uri": "692859932238.dkr.ecr.ap-south-1.amazonaws.com/mlops-assign-1:latest"
             }
           }' > zappa_settings.json
       - name: Configure AWS CLI with secrets
