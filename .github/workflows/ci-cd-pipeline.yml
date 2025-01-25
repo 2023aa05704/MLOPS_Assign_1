@@ -138,6 +138,35 @@ jobs:
               --image-uri 692859932238.dkr.ecr.ap-south-1.amazonaws.com/mlops_assign_1:latest
             echo "Lambda function updated successfully."
           fi
+
+      - name: Create S3 bucket if it doesn't exist
+        run: |
+          BUCKET_NAME="zappa-mlops-assign-1"
+          if ! aws s3 ls "s3://$BUCKET_NAME" 2>&1 | grep -q 'NoSuchBucket'; then
+            echo "Bucket exists: $BUCKET_NAME"
+          else
+            echo "Bucket does not exist. Creating bucket..."
+            aws s3 mb s3://$BUCKET_NAME --region ap-south-1
+          fi
+
+      - name: Configure Zappa settings
+        run: |
+          # Make sure the zappa_settings.json exists and is correctly configured
+          echo '{
+            "production": {
+              "app_function": "src.app.lambda_handler",
+              "aws_region": "ap-south-1",
+              "profile_name": "default",
+              "project_name": "mlops-assign-1",
+              "runtime": "python3.11",
+              "s3_bucket": "zappa-mlops-assign-1"
+            }
+          }' > zappa_settings.json
+      - name: Deploy Flask app to Lambda using Zappa
+        run: |
+          # Deploy using Zappa
+          zappa deploy production
+
       - name: Create Lambda Function URL
         run: |
           # Create Lambda function URL configuration

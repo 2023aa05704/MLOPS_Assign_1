@@ -4,6 +4,7 @@ import joblib
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from aws_lambda_wsgi import make_lambda_handler
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -57,7 +58,10 @@ def predict():
         app.logger.error(f"Error during prediction: {e}")
         return jsonify({'error': str(e)}), 400
 
-# Start the Flask application
-if __name__ == '__main__':
-    app.logger.info("Starting Flask application.")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+# # Start the Flask application
+# if __name__ == '__main__':
+#     app.logger.info("Starting Flask application.")
+#     app.run(debug=True, host='0.0.0.0', port=5000)
+
+# Lambda handler for Zappa
+lambda_handler = make_lambda_handler(app)
