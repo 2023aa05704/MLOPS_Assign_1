@@ -111,22 +111,31 @@ jobs:
             echo "Role already exists. Skipping creation."
           fi
 
-      # Create Lambda function (if it does not exist)
       - name: Create Lambda function (if it does not exist)
         run: |
-          aws lambda get-function --function-name mlops_assign_1 || \
-          aws lambda create-function \
-            --function-name mlops_assign_1 \
-            --package-type Image \
-            --role arn:aws:iam::692859932238:role/lambda-execution-role \
-            --code ImageUri=692859932238.dkr.ecr.ap-south-1.amazonaws.com/mlops_assign_1:latest \
-            --timeout 900 \
-            --memory-size 1024 \
-            --region ap-south-1
+          # Try to get the Lambda function
+          FUNCTION_EXISTS=$(aws lambda get-function --function-name mlops_assign_1 2>&1 || echo "Function not found")
 
-      # Deploy to AWS Lambda
-      - name: Deploy to AWS Lambda
-        run: |
-          aws lambda update-function-code \
-            --function-name mlops_assign_1 \
-            --image-uri 692859932238.dkr.ecr.ap-south-1.amazonaws.com/mlops_assign_1:latest
+          # If the function does not exist, create it
+          if [[ "$FUNCTION_EXISTS" == *"Function not found"* ]]; then
+            echo "Lambda function does not exist. Creating function..."
+
+            aws lambda create-function \
+              --function-name mlops_assign_1 \
+              --package-type Image \
+              --role arn:aws:iam::692859932238:role/lambda-execution-role \
+              --code ImageUri=692859932238.dkr.ecr.ap-south-1.amazonaws.com/mlops_assign_1:latest \
+              --timeout 900 \
+              --memory-size 1024 \
+              --region ap-south-1
+            echo "Lambda function created successfully."
+          else
+            echo "Lambda function exists. Updating function..."
+
+            # If the function exists, update the function code
+            aws lambda update-function-code \
+              --function-name mlops_assign_1 \
+              --image-uri 692859932238.dkr.ecr.ap-south-1.amazonaws.com/mlops_assign_1:latest
+            echo "Lambda function updated successfully."
+          fi
+
