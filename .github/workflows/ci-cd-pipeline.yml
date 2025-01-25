@@ -140,10 +140,9 @@ jobs:
           fi
       - name: Create Lambda Function URL
         run: |
-          # Create Lambda function URL (using the Lambda function name)
-          FUNCTION_URL=$(aws lambda create-function-url \
+          # Create Lambda function URL configuration
+          FUNCTION_URL=$(aws lambda create-function-url-config \
             --function-name mlops_assign_1 \
-            --qualifier ${{ github.sha }} \
             --authorization-type NONE \
             --region ap-south-1 \
             --query 'FunctionUrl' \
