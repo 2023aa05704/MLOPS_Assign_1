@@ -15,13 +15,17 @@ X = data.drop(
 y = data.price.copy()
 
 # Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
 n_estimators = 200
 random_state = 42
 
 # Train the RandomForestRegressor
-model = RandomForestRegressor(n_estimators=n_estimators, random_state=random_state)
+model = RandomForestRegressor(
+    n_estimators=n_estimators, random_state=random_state
+)
 model.fit(X_train, y_train)
 
 # Make predictions
