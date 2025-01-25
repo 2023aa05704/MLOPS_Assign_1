@@ -23,7 +23,7 @@ jobs:
       - name: Run flake8
         run: |
           pip install flake8
-          flake8 your_code.py
+          flake8 train.py
 
   test:
     runs-on: ubuntu-latest
@@ -46,9 +46,64 @@ jobs:
     needs: test  # This ensures 'deploy' runs after 'test'
     steps:
       - uses: actions/checkout@v2
-      - name: Install AWS CLI
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1  # Replace with the region you are using
+      - name: Clone another repository
         run: |
-          pip install awscli
-      - name: Deploy to S3
+          git clone https://github.com/2023aa05704/MLOPS_Assign_1.git  # Clone external repo (replace with actual URL)
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Build Docker image
         run: |
-          aws s3 cp model.joblib s3://your-bucket-name/
+          docker build -t MLOPS_Assign_1 .
+      - name: Tag Docker image
+        run: |
+          docker tag MLOPS_Assign_1:latest 692859932238.dkr.ecr.ap-south-1.amazonaws.com/MLOPS_Assign_1:latest
+      - name: Push Docker image to ECR
+        run: |
+          docker push 692859932238.dkr.ecr.ap-south-1.amazonaws.com/MLOPS_Assign_1:latest
+    - name: Create Lambda execution role if it does not exist
+      if: steps.check-role.outcome == 'failure'  # Create the role only if the previous step fails
+      run: |
+        # Create the trust policy for the role
+        TRUST_POLICY='{
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }'
+
+        # Create the IAM role
+        aws iam create-role --role-name lambda-execution-role \
+          --assume-role-policy-document "$TRUST_POLICY"
+
+        # Attach the AWSLambdaBasicExecutionRole policy
+        aws iam attach-role-policy --role-name lambda-execution-role \
+          --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    - name: Create Lambda function (if it does not exist)
+      run: |
+        aws lambda get-function --function-name MLOPS_Assign_1 || \
+        aws lambda create-function \
+          --function-name MLOPS_Assign_1 \
+          --package-type Image \
+          --role arn:aws:iam::692859932238:role/lambda-execution-role \
+          --code ImageUri=692859932238.dkr.ecr.ap-south-1.amazonaws.com/MLOPS_Assign_1:latest \
+          --timeout 900 \
+          --memory-size 1024 \
+          --region ap-south-1
+      - name: Deploy to AWS Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name your-lambda-function-name \
+            --image-uri 692859932238.dkr.ecr.ap-south-1.amazonaws.com/MLOPS_Assign_1:latest
