@@ -196,7 +196,7 @@ jobs:
           # Create Lambda function URL configuration
           FUNCTION_URL=$(aws lambda create-function-url-config \
             --function-name mlops_assign_1 \
-            --auth-type NONE \
+            --authorization-type NONE \
             --region ap-south-1 \
             --query 'FunctionUrl' \
             --output text)
