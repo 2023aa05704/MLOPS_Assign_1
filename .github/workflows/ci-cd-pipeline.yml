@@ -60,13 +60,13 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
       - name: Build Docker image
         run: |
-          docker build -t MLOPS_Assign_1 .
+          docker build -t mlops_assign_1 .
       - name: Tag Docker image
         run: |
-          docker tag MLOPS_Assign_1:latest 692859932238.dkr.ecr.ap-south-1.amazonaws.com/MLOPS_Assign_1:latest
+          docker tag mlops_assign_1:latest 692859932238.dkr.ecr.ap-south-1.amazonaws.com/mlops_assign_1:latest
       - name: Push Docker image to ECR
         run: |
-          docker push 692859932238.dkr.ecr.ap-south-1.amazonaws.com/MLOPS_Assign_1:latest
+          docker push 692859932238.dkr.ecr.ap-south-1.amazonaws.com/mlops_assign_1:latest
       - name: Create Lambda execution role if it does not exist
         if: steps.check-role.outcome == 'failure'  # Create the role only if the previous step fails
         run: |
@@ -92,12 +92,12 @@ jobs:
             --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       - name: Create Lambda function (if it does not exist)
         run: |
-          aws lambda get-function --function-name MLOPS_Assign_1 || \
+          aws lambda get-function --function-name mlops_assign_1 || \
           aws lambda create-function \
-            --function-name MLOPS_Assign_1 \
+            --function-name mlops_assign_1 \
             --package-type Image \
             --role arn:aws:iam::692859932238:role/lambda-execution-role \
-            --code ImageUri=692859932238.dkr.ecr.ap-south-1.amazonaws.com/MLOPS_Assign_1:latest \
+            --code ImageUri=692859932238.dkr.ecr.ap-south-1.amazonaws.com/mlops_assign_1:latest \
             --timeout 900 \
             --memory-size 1024 \
             --region ap-south-1
@@ -105,4 +105,4 @@ jobs:
         run: |
           aws lambda update-function-code \
             --function-name your-lambda-function-name \
-            --image-uri 692859932238.dkr.ecr.ap-south-1.amazonaws.com/MLOPS_Assign_1:latest
+            --image-uri 692859932238.dkr.ecr.ap-south-1.amazonaws.com/mlops_assign_1:latest
