@@ -46,6 +46,13 @@ jobs:
     needs: test  # This ensures 'deploy' runs after 'test'
     steps:
       - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
