@@ -72,28 +72,39 @@ jobs:
         run: |
           docker push 692859932238.dkr.ecr.ap-south-1.amazonaws.com/mlops_assign_1:latest
       - name: Create Lambda execution role if it does not exist
-        if: steps.check-role.outcome == 'failure'  # Create the role only if the previous step fails
         run: |
-          # Create the trust policy for the role
-          TRUST_POLICY='{
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Effect": "Allow",
-                "Principal": {
-                  "Service": "lambda.amazonaws.com"
-                },
-                "Action": "sts:AssumeRole"
-              }
-            ]
-          }'
-          # Create the IAM role
-          aws iam create-role --role-name lambda-execution-role \
-            --assume-role-policy-document "$TRUST_POLICY"
+          # Check if the role exists
+          ROLE_EXISTS=$(aws iam get-role --role-name lambda-execution-role 2>&1 || echo "Role not found")
 
-          # Attach the AWSLambdaBasicExecutionRole policy
-          aws iam attach-role-policy --role-name lambda-execution-role \
-            --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+          if [[ "$ROLE_EXISTS" == *"Role not found"* ]]; then
+            echo "Role does not exist. Creating role..."
+
+            # Create the trust policy for the role
+            TRUST_POLICY='{
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": "lambda.amazonaws.com"
+                  },
+                  "Action": "sts:AssumeRole"
+                }
+              ]
+            }'
+
+            # Create the IAM role
+            aws iam create-role --role-name lambda-execution-role \
+              --assume-role-policy-document "$TRUST_POLICY"
+
+            # Attach the AWSLambdaBasicExecutionRole policy
+            aws iam attach-role-policy --role-name lambda-execution-role \
+              --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+            echo "Lambda execution role created successfully."
+          else
+            echo "Role already exists. Skipping creation."
+          fi
       - name: Create Lambda function (if it does not exist)
         run: |
           aws lambda get-function --function-name mlops_assign_1 || \
